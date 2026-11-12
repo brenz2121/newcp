@@ -48,8 +48,61 @@ function renderNavigation() {
       button.addEventListener("click", logout);
     });
   document
-    .querySelectorAll(".profile-form, .profile-form-section form")
-    .forEach((form) => {
+  .querySelectorAll(".profile-form, .profile-form-section form")
+  .forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const notice =
+        form.querySelector('[role="status"]') ||
+        document.createElement("p");
+
+      notice.setAttribute("role", "status");
+      notice.className = "demo-note";
+
+      if (!notice.parentElement) {
+        form.append(notice);
+      }
+
+      const button = form.querySelector('[type="submit"]');
+      const full_name = form.querySelector('[name="nama"]').value.trim();
+      const age = Number(form.querySelector('[name="umur"]').value);
+      const gender = form.querySelector('[name="jenis_kelamin"]').value;
+
+      button.disabled = true;
+      button.textContent = "Menyimpan...";
+
+      try {
+        const response = await fetch("/api/children", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            full_name,
+            age,
+            gender,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Gagal menyimpan data anak.");
+        }
+
+        notice.textContent = "Data anak berhasil disimpan!";
+        form.reset();
+
+      } catch (error) {
+        notice.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = "Simpan";
+      }
+    });
+  });
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         let notice = form.querySelector('[role="status"]');
